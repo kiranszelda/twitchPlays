@@ -11,6 +11,11 @@ export default function TwitchIRC(ssl, nickname, token, channel) {
   this.chatMessage;
   this.chatUsername;
 
+  // Misc variables
+  let connecting = false;
+  let connected = false;
+  this.reading = false;
+
   // TLS Connection configs
   const options = {
     host: "irc.chat.twitch.tv",
@@ -18,34 +23,42 @@ export default function TwitchIRC(ssl, nickname, token, channel) {
     rejectUnauthorized: false, // Bypass certificate hostname validation
   };
 
-  this.connect = () => {
-    this.client = tls.connect(options, () => {
-      console.log("Connecting to Twitch IRC");
+  this.connect = async () => {
+    if (!connecting) {
+      return new Promise((resolve) => {
+        connecting = true;
+        this.client = tls.connect(options, () => {
+          console.log("Connecting to Twitch IRC");
 
-      // Authenticate with Twitch IRC
-      this.client.write(`PASS ${token}\r\n`);
-      this.client.write(`NICK ${nickname}\r\n`);
-      this.client.write(`JOIN ${channel}\r\n`);
-      console.log("Connected to Twitch IRC");
-      return 1;
-    });
+          // Authenticate with Twitch IRC
+          this.client.write(`PASS ${token}\r\n`);
+          this.client.write(`NICK ${nickname}\r\n`);
+          this.client.write(`JOIN ${channel}\r\n`);
+          connected = true;
+          console.log("Connected to Twitch IRC");
+          resolve();
+        });
+      });
+    } else {
+      return new Promise((resolve) => {
+        const connectingInterval = setInterval(() => {
+          if (connected) {
+            clearInterval(connectingInterval);
+            resolve();
+          }
+        }, 100);
+      });
+    }
   };
 
-  // TODO: Fix this, weird async code is making this execute before connecting
-  /*this.disconnect = () => {
-    if (connected) {
-      this.client.write(`PART #${channel}`);
-      console.log("Disconnected to the Twitch IRC");
-      connected = false;
-    }
-    };*/
-
-  // TODO: Fix this as well, same issue as disconnect
-  /*this.sendMessage = async (inputMessage) => {
-    this.client.write(`PRIVMSG #kiranszelda :${inputMessage}\r\n`);
-    };*/
+  this.sendMessage = async (inputMessage) => {
+    await this.connect();
+    this.client.write(`PRIVMSG ${channel} :${inputMessage}\r\n`);
+  };
 
   this.startRead = async (onRead) => {
+    await this.connect();
+    this.reading = true;
     this.client.on("data", (data) => {
       // Get data in from :username!username@username.tmi.twitch.tv PRIVMSG #(channel) :(Message)
       // Send data in form PRIVMSG #(channel) :(Message)\r\n
@@ -69,6 +82,11 @@ export default function TwitchIRC(ssl, nickname, token, channel) {
       });
     });
   };
+
+  // TODO: Implement stopRead
+  /*this.stopRead = () => {
+    this.reading = false;
+  };*/
 
   // Here to make sure client is defined
   if (this.client != undefined) {
