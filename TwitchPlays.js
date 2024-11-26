@@ -20,6 +20,7 @@ const dotool = "xdotool";
 // There's also an example
 function onMessage(username, message) {
   if (message === "jump") {
+    // Run execSync("command")
     execSync(`${dotool} key space`);
   } else if (message === "left") {
     execSync(`${dotool} keyup d`);
