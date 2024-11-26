@@ -10,6 +10,7 @@
 - Program to control computer (Ex. xdotool)
 - Twitch account and app
 - Twitch oauth key with chat:read access
+- Knowledge of some JavaScript
 
 ## Setup
 
