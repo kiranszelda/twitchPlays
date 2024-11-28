@@ -8,7 +8,7 @@
 
 - Node JS (min version v7.6)
 - Program to control computer (Ex. xdotool)
-- Twitch account and app
+- Twitch account
 - Twitch oauth key with chat:read access
 - Knowledge of some JavaScript
 
