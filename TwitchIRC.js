@@ -89,7 +89,6 @@ export default function TwitchIRC(ssl, nickname, token, channel) {
     }
   };
 
-  // TODO: Implement stopRead
   this.stopRead = () => {
     this.reading = false;
   };
