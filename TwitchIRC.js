@@ -58,35 +58,46 @@ export default function TwitchIRC(ssl, nickname, token, channel) {
 
   this.startRead = async (onRead) => {
     await this.connect();
-    this.reading = true;
-    this.client.on("data", (data) => {
-      // Get data in from :username!username@username.tmi.twitch.tv PRIVMSG #(channel) :(Message)
-      // Send data in form PRIVMSG #(channel) :(Message)\r\n
-      const messages = data.toString().split(`\r\n`);
+    if (!this.reading) {
+      console.log("Using the dev version");
+      this.reading = true;
+      this.client.on("data", (data) => {
+        // Get data in from :username!username@username.tmi.twitch.tv PRIVMSG #(channel) :(Message)
+        // Send data in form PRIVMSG #(channel) :(Message)\r\n
+        const messages = data.toString().split(`\r\n`);
 
-      messages.forEach((message) => {
-        if (!message) return;
+        if (!this.reading) {
+          return;
+        }
+        messages.forEach((message) => {
+          if (!message) return;
 
-        // Twitch sends a ping message which you have to reply to with PONG
-        if (message.startsWith("PING")) {
-          this.client.write("PONG :tmi.twitch.tv\r\n");
-        }
-        const match = message.match(
-          /^:(\w+)!\w+@\w+\.tmi\.twitch\.tv PRIVMSG #\w+ :(.*)$/
-        );
-        if (match) {
-          this.chatUsername = match[1];
-          this.chatMessage = match[2];
-          onRead();
-        }
+          // Twitch sends a ping message which you have to reply to with PONG
+          if (message.startsWith("PING")) {
+            this.client.write("PONG :tmi.twitch.tv\r\n");
+          }
+          const match = message.match(
+            /^:(\w+)!\w+@\w+\.tmi\.twitch\.tv PRIVMSG #\w+ :(.*)$/ // I fucking hate javascrip regex
+          );
+          if (match) {
+            this.chatUsername = match[1];
+            this.chatMessage = match[2];
+            onRead();
+          }
+        });
       });
-    });
+    }
   };
 
   // TODO: Implement stopRead
-  /*this.stopRead = () => {
+  this.stopRead = () => {
     this.reading = false;
-  };*/
+  };
+
+  this.disconnect = async () => {
+    await this.connect();
+    this.client.end();
+  };
 
   // Here to make sure client is defined
   if (this.client != undefined) {
