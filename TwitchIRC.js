@@ -59,7 +59,6 @@ export default function TwitchIRC(ssl, nickname, token, channel) {
   this.startRead = async (onRead) => {
     await this.connect();
     if (!this.reading) {
-      console.log("Using the dev version");
       this.reading = true;
       this.client.on("data", (data) => {
         // Get data in from :username!username@username.tmi.twitch.tv PRIVMSG #(channel) :(Message)
